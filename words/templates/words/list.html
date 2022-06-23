@@ -1,0 +1,15 @@
+{% extends 'main.html' %}
+
+<h1>List</h1>
+
+{% block content %}
+<div>
+    <div>
+        {% for word in words %}
+        <div>
+            <h3>{{word.id}} -- {{word.rus}} -- {{word.en}}</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}
