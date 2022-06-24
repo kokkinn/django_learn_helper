@@ -3,11 +3,27 @@
 <h1>List</h1>
 
 {% block content %}
-<div>
-    <ul>
-        {% for word in words %}
-        <li><h3><a href="{% url 'single_word' uuid=word.id %}">{{word.word1}}</a> -- {{word.word2}}</h3></li>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Word</th>
+        <th>Translation</th>
+        <th>Score</th>
+        <th>View</th>
+        <th>Update</th>
+    </tr>
+    {% for word in words %}
+    <tr>
+        <td>{{word.id}}</td>
+        <td>{{word.word1}}</td>
+        <td>{{word.word2}}</td>
+        <td>{{word.score}}</td>
+        <td><a href="{% url 'single_word' uuid=word.id %}">View</a></td>
+        <td><a href="{% url 'update_word' uuid=word.id %}">Update</a></td>
+        <td><a href="{% url 'delete_word' uuid=word.id %}">Delete</a></td>
+    <tr>
+
+
         {% endfor %}
-    </ul>
-</div>
+</table>
 {% endblock content %}

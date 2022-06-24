@@ -1,0 +1,13 @@
+{% extends 'main.html' %}
+
+{% block content %}
+
+<form action="" method="POST">
+      {% csrf_token %}
+    <p>U sure? {{word}}</p>
+    <a href="{% url 'list_view' %}"> Go back </a>
+        <input type="submit" value="Confirm"/>
+
+</form>
+
+{% endblock %}
