@@ -1,7 +1,29 @@
 from django.shortcuts import render, redirect
-from .models import Word
+from .models import Word, GroupOfWords
 from django.http import HttpResponse
 from .forms import WordForm
+from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView, LogoutView
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import reverse_lazy, reverse
+from django.views.generic import CreateView, ListView
+from django.views.generic.edit import ProcessFormView
+
+from accounts.forms import AccountRegistrationForm, AccountUpdateForm, AccountProfileUpdate
+from django.contrib import messages
+
+
+class WordsListView(ListView):
+    context_object_name = "words"
+    model = Word
+    template_name = "words/list.html"
+
+
+# def total_list_view(request):
+#     words = Word.objects.all()
+#     context = {"words": words}
+#     return render(request, "words/list.html", context)
 
 
 def home_view(request):
@@ -14,8 +36,14 @@ def one_word_view(request, uuid):
     return render(request, "words/single_word.html", context)
 
 
-def list_view(request):
-    words = Word.objects.all()
+def groups_list_view(request):
+    groups = GroupOfWords.objects.all()
+    context = {"groups": groups}
+    return render(request, "words/groups_list.html", context)
+
+
+def words_in_group_list_view(request, uuid):
+    words = GroupOfWords.objects.get(id=uuid).words.all()
     context = {"words": words}
     return render(request, "words/list.html", context)
 

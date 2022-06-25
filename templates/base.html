@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Learn Helper</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="{% static 'styles/main.css' %}">
+</head>
+<body>
+
+{% include "navbar.html" %}
+{% block tittle %}
+{% endblock %}
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

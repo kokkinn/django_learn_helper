@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+
+
+
+
+{% block content %}
+    <form method ="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+            <div class ="p-3 m-3">
+                <h2 class="account-heading"> {{ user.first_name }} {{ user.last_name }}</h2>
+                <p class="text-secondary"> {{ user.email }} </p>
+            </div>
+        </div>
+        {{ user_form | crispy }}
+
+
+        <input class="btn btn-success mt-3" type="submit" value="Save">
+        <a class="btn btn-danger mt-3" href="{% url 'index' %}">Cancel</a>
+        </form>
+
+{% endblock %}

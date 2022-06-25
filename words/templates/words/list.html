@@ -1,4 +1,4 @@
-{% extends 'main.html' %}
+{% extends 'base.html' %}
 
 <h1>List</h1>
 
@@ -18,9 +18,9 @@
         <td>{{word.word1}}</td>
         <td>{{word.word2}}</td>
         <td>{{word.score}}</td>
-        <td><a href="{% url 'single_word' uuid=word.id %}">View</a></td>
-        <td><a href="{% url 'update_word' uuid=word.id %}">Update</a></td>
-        <td><a href="{% url 'delete_word' uuid=word.id %}">Delete</a></td>
+        <td><a href="{% url 'words:single' uuid=word.id %}">View</a></td>
+        <td><a href="{% url 'words:update' uuid=word.id %}">Update</a></td>
+        <td><a href="{% url 'words:delete' uuid=word.id %}">Delete</a></td>
     <tr>
 
 

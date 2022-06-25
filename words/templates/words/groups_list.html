@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>View</th>
+    </tr>
+    {% for group in groups %}
+        <tr>
+            <td>{{group.name}}</td>
+            <td><a href="{% url 'words:group' uuid=group.id %}">View</a></td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

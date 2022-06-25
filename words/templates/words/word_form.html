@@ -1,10 +1,10 @@
-{% extends 'main.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
 
 <h1>Word creation</h1>
 
-<form action="" method="POST">
+<form action="{% url 'words:update' %}" method="POST">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit">

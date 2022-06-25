@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+
+
+
+{% block content %}
+    <a class="btn btn-outline-danger" href="{% url 'accounts:login' %}">Login</a>&nbsp;&nbsp;
+    <a class="btn btn-outline-danger" href="{% url 'accounts:registration' %}">Registration</a>&nbsp;&nbsp;
+{% endblock %}
