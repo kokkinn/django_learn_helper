@@ -37,8 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'words.apps.WordsConfig',
     'accounts.apps.AccountsConfig',
-    'crispy_forms'
-
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -112,6 +111,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = "accounts.CustomUser"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 

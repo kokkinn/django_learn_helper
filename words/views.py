@@ -10,7 +10,7 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import ProcessFormView
 
-from accounts.forms import AccountRegistrationForm, AccountUpdateForm, AccountProfileUpdate
+# from accounts.forms import AccountRegistrationForm, AccountUpdateForm, AccountProfileUpdate
 from django.contrib import messages
 
 
