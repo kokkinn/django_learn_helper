@@ -2,28 +2,54 @@
 
 <h1>List</h1>
 
+
 {% block content %}
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Word</th>
-        <th>Translation</th>
-        <th>Score</th>
-        <th>View</th>
-        <th>Update</th>
-    </tr>
-    {% for word in words %}
-    <tr>
-        <td>{{word.id}}</td>
-        <td>{{word.word1}}</td>
-        <td>{{word.word2}}</td>
-        <td>{{word.score}}</td>
-        <td><a href="{% url 'words:single' uuid=word.id %}">View</a></td>
-        <td><a href="{% url 'words:update' uuid=word.id %}">Update</a></td>
-        <td><a href="{% url 'words:delete' uuid=word.id %}">Delete</a></td>
-    <tr>
 
 
-        {% endfor %}
-</table>
+
+            <form action="" method="GET">
+                {{ filter.form }}
+                <input type="Submit" name="filter_button" value="Search">
+            </form>
+
+            <form action="" method="POST">
+                {% csrf_token %}
+                <input type="Submit" name="main_button" value="Main">
+            </form>
+
+<form action="" method="POST">
+    <a href="{% url 'words:create' %}">Create</a>
+    {% csrf_token %}
+    <input type="Submit" name="delete_button" value="Delete">
+
+    <table>
+        <tr>
+            <th>Word</th>
+            <th>Translation</th>
+            <th>Score</th>
+            <th>View</th>
+            <th>Update</th>
+            <th></th>
+            <th>Checkbox</th>
+        </tr>
+
+        {% if user.is_authenticated %}
+
+
+        {% for word in filter.qs %}
+        <tr>
+            <td>{{word.word1}}</td>
+            <td>{{word.word2}}</td>
+            <td>{{word.score}}</td>
+            <td><a href="{% url 'words:single' uuid=word.id %}">View</a></td>
+            <td><a href="{% url 'words:update' uuid=word.id %}">Update</a></td>
+            <td><a href="{% url 'words:delete' uuid=word.id %}">Delete</a></td>
+            <td><input type="Checkbox" name="checks" value="{{word.id}}"></td>
+        <tr>
+            {% endfor %}
+
+            {% endif %}
+
+    </table>
+</form>
 {% endblock content %}

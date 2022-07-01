@@ -1,5 +1,6 @@
 from django.urls import path
 
+from . import views
 from .views import AccountLoginView
 from .views import AccountLogoutView
 from .views import AccountRegistrationDoneView
@@ -18,4 +19,6 @@ urlpatterns = [
     path('logout/', AccountLogoutView.as_view(), name='logout'),
     path('profile/', account_profile_view, name='profile'),
     path('profile_change/', AccountUpdateProfileView.as_view(), name='profile_change'),
+    path("mail/", views.send_me_mail),
+
 ]

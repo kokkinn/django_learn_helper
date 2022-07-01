@@ -10,6 +10,7 @@
         <td><a href="{% url 'accounts:profile' %}">Profile</a></td>
         <td><a href="{% url 'accounts:logout' %}">Logout</a></td>
         <td><a href="{% url 'password_change' %}">Change password</a></td>
+        <td>Welcome, {{user.username}}</td>
 
         {% else %}
         <td><a href="{% url 'accounts:registration' %}">Registration</a></td>

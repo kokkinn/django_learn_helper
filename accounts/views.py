@@ -7,7 +7,10 @@ from django.urls import reverse
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView
 from django.views.generic import TemplateView
+from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
 
+from django_learn_helper import settings
 from .forms import AccountRegistrationForm
 from .forms import AccountUpdateForm
 from .utils import signer
@@ -62,6 +65,7 @@ def account_profile_view(request):
 
 
 class AccountUpdateProfileView(UpdateView):
+
     template_name = 'accounts/profile_update.html'
     model = get_user_model()
     success_url = reverse_lazy('accounts:profile')
@@ -69,3 +73,16 @@ class AccountUpdateProfileView(UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+def send_me_mail(request):
+    from django.core.mail import send_mail
+    # user_email = request.user.email
+    send_mail(
+        'Test mail',
+        'I just wanted to say that you are fucking asshole',
+        settings.EMAIL_HOST_USER,
+        ["kokkin.george@gmail.com"],
+        fail_silently=False
+    )
+    return render(request, "accounts/thank_you.html")
