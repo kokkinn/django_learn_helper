@@ -6,16 +6,15 @@
 {% block content %}
 
 
+<form action="" method="GET">
+    {{ filter.form }}
+    <input type="Submit" name="filter_button" value="Search">
+</form>
 
-            <form action="" method="GET">
-                {{ filter.form }}
-                <input type="Submit" name="filter_button" value="Search">
-            </form>
+<a href="{% url 'words:list' %}">Reset filter</a>
 
-            <form action="" method="POST">
-                {% csrf_token %}
-                <input type="Submit" name="main_button" value="Main">
-            </form>
+<hr>
+
 
 <form action="" method="POST">
     <a href="{% url 'words:create' %}">Create</a>

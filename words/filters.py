@@ -1,21 +1,21 @@
 import django_filters
+from django import forms
 
-from words.models import Word
+from words.models import Word, GroupOfWords
+
+
+def groups(request):
+    if request is None:
+        return GroupOfWords.objects.none()
+    return request.user.groups_of_words.all()
 
 
 class WordFilter(django_filters.FilterSet):
+    group = django_filters.ModelMultipleChoiceFilter(queryset=groups, widget=forms.CheckboxSelectMultiple())
+    # score__lt = django_filters.NumberFilter(field_name="score", lookup_expr="et")
+    # name_sw = django_filters.CharFilter(field_name="word1", lookup_expr="startswith")
 
-    # def __init__(self, user):
-    #     super().__init__(self, user)
-    #     # self.a = self.request.user
-    # CHOICES = (("A","a"), ("B","b"))
-
-    # filtering = django_filters.ChoiceFilter(label="Group", choices=CHOICES, method="filter_by_group")
-
+    # score__gt = django_filters.NumberFilter(field_name="score")
     class Meta:
         model = Word
-        fields = ("group",)
-
-    # def filter_by_group(self, queryset, name, value):
-    #
-    #     return queryset.
+        fields = {"score": ["lt", "gt"]}

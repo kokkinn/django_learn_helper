@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Test for group {{group_obj.name}}</h1>
+
+<h1>{{word_obj.word1}}</h1>
+
+<form action="" method="POST">
+    {% csrf_token %}
+    {{form}}
+
+
+
+
+</form>
+
+{% endblock %}

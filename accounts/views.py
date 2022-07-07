@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.signing import BadSignature
@@ -40,7 +41,9 @@ def user_activate(request, sign):
         template = 'accounts/activation_done.html'
         user.is_active = True
         user.is_activated = True
-        user.save()
+        apps.get_model("words.GroupOfWords").objects.create(name="General", user=user)
+        print("User created")
+    user.save()
 
     return render(request, template)
 
@@ -65,7 +68,6 @@ def account_profile_view(request):
 
 
 class AccountUpdateProfileView(UpdateView):
-
     template_name = 'accounts/profile_update.html'
     model = get_user_model()
     success_url = reverse_lazy('accounts:profile')

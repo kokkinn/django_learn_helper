@@ -1,5 +1,8 @@
+from django.apps import apps
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
 
 
 class CustomUser(AbstractUser):
@@ -16,5 +19,7 @@ class CustomUser(AbstractUser):
         return self.username
 
 
-
-
+# @receiver(post_save, sender=Word)
+# def custom_word(sender, instance, created, **kwargs):
+#     apps.get_model("words.GroupOfWords").objects.create(name="General", user=instance)
+#     print("User created")

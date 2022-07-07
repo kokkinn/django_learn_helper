@@ -13,9 +13,13 @@ urlpatterns = [
     path("update/<uuid:uuid>/", views.WordUpdateView.as_view(), name="update"),
     path("delete/<uuid:uuid>/", views.delete_view, name="delete"),
     path("groups/", views.GroupsListView.as_view(), name="groups_list"),
-    path("groups/<uuid:uuid>", views.words_in_group_list_view, name='group'),
+    path("groups/<uuid:uuid>", views.WordsInGroupListView.as_view(), name='group'),
     path("groups/create", views.GroupCreateView.as_view(), name="group_create"),
-    path("groups/update/<uuid:uuid>", views.GroupUpdateView.as_view(), name="group_update")
+    path("groups/update/<uuid:uuid>", views.GroupUpdateView.as_view(), name="group_update"),
+    path("tests", views.TestsHomeView.as_view(), name="tests_home"),
+    path("tests/quick_test", views.QuickTest.as_view(), name="quick_test"),
+    path("tests/groups_of_words_test/<uuid:uuid>", views.GroupOfWordsTest.as_view(), name="groups_of_words_test")
+
 
 
 ]
