@@ -14,7 +14,7 @@ from faker import Faker
 
 class GroupOfWords(models.Model):
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=200, null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
     user = models.ForeignKey(to=CustomUser, related_name="groups_of_words", on_delete=models.CASCADE, null=False)
 
@@ -28,10 +28,10 @@ class Word(models.Model):
     word2 = models.CharField(max_length=30)
     id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
     score = models.IntegerField(default=0)
-    group = models.ManyToManyField(to=GroupOfWords, related_name='words', blank=True)
-
-    def __str__(self):
-        return f"{self.word1} - {self.word2}"
+    group = models.ManyToManyField(to=GroupOfWords, related_name='words', blank=True, null=True)
+    #
+    # def __str__(self):
+    #     return f"{self.word1}: {self.word2}, {self.score}, {str(self.id)[0:4]}"
 
     # def save(self, *args, **kwargs):
     #
@@ -51,6 +51,8 @@ class Word(models.Model):
             wordobj.score = random.randint(-10, 50)
             wordobj.save()
             # wordobj.group.add(random.choice(list(wordobj.user.groups_of_words.all())))
+            wordobj.group.add(wordobj.user.groups_of_words.get(name="General"))
+            wordobj.save()
 
 
 @receiver(post_save, sender=Word)

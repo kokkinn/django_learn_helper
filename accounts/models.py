@@ -7,7 +7,7 @@ from django.dispatch import receiver
 
 class CustomUser(AbstractUser):
     is_activated = models.BooleanField(default=True, db_index=True)
-    avatar = models.ImageField(upload_to='profile/', default='default.png')
+    avatar = models.ImageField(upload_to='avatars/', default='default.png')
     birthday = models.DateField(null=True, blank=True)
     city = models.CharField(max_length=50, null=True, blank=True)
     rating = models.PositiveSmallIntegerField(default=0)

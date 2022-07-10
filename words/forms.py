@@ -21,11 +21,11 @@ class GroupForm(ModelForm):
 
     class Meta:
         model = GroupOfWords
-        fields = ("name", "words")
+        fields = ("name", "description", "words")
 
     words = ModelMultipleChoiceField(
         queryset=None,
-        widget=forms.CheckboxSelectMultiple)
+        widget=forms.CheckboxSelectMultiple, required=False)
 
 
 # class GroupForm(forms.Form):
@@ -51,18 +51,26 @@ class GroupFilterForm(forms.Form):
 
 
 # class QuickTestForm(forms.Form)
+def qs_not_empty(query_set):
+    return False if query_set.words.count() == 0 else True
+
 
 class GroupChoiceForm(forms.Form):
 
     def __init__(self, user, *args, **kwargs, ):
         super(GroupChoiceForm, self).__init__(*args, **kwargs)
         self.user = user
-        self.fields['groups'].queryset = GroupOfWords.objects.filter(
-            user=self.user)
+        groups_qs = GroupOfWords.objects.filter(user=self.user)
+        for group in groups_qs:
+            if not qs_not_empty(group):
+                groups_qs = groups_qs.exclude(id=group.id)
+        # filtered_groups_qs = filter(qs_not_empty, groups_qs)
+        # print(list(filtered_groups_qs))
+        self.fields['groups'].queryset = groups_qs
 
-    class Meta:
-        model = GroupOfWords
-        fields = ("name", "words")
+    # class Meta:
+    #     model = GroupOfWords
+    #     fields = ("name", "words")
 
     groups = forms.ModelChoiceField(queryset=None)
 
@@ -71,3 +79,22 @@ class TestInputForm(ModelForm):
     class Meta:
         model = Word
         fields = ("word1",)
+
+
+class TestParametersForm(forms.Form):
+
+    def __init__(self, user, *args, **kwargs,):
+        super(TestParametersForm, self).__init__(*args, **kwargs)
+        self.user = user
+        groups_qs = GroupOfWords.objects.filter(user=self.user)
+        for group in groups_qs:
+            if not qs_not_empty(group):
+                groups_qs = groups_qs.exclude(id=group.id)
+        self.fields['groups'].queryset = groups_qs
+
+    duration_choices = (("loop", "Loop"), ("finite", "Finite"))
+    type_choices = (("ranked", "Ranked"), ("unranked", "Unranked"))
+
+    groups = forms.ModelChoiceField(queryset=None)
+    durations = forms.ChoiceField(choices=duration_choices)
+    type = forms.ChoiceField(choices=type_choices)

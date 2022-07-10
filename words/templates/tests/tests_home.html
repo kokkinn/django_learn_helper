@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 <a href="{% url 'words:groups_of_words_test' uuid=''%}">Test</a>
 {% block content %}
-<a href="{% url 'words:quick_test' %}">Quick test</a>
+<!---->
 
 <form method="post">
     {%csrf_token%}
-    {{form}}
+    {{form.as_p}}
     <input type="submit">
 </form>
 

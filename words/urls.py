@@ -17,7 +17,7 @@ urlpatterns = [
     path("groups/create", views.GroupCreateView.as_view(), name="group_create"),
     path("groups/update/<uuid:uuid>", views.GroupUpdateView.as_view(), name="group_update"),
     path("tests", views.TestsHomeView.as_view(), name="tests_home"),
-    path("tests/quick_test", views.QuickTest.as_view(), name="quick_test"),
+    # path("tests/quick_test", views.QuickTest.as_view(), name="quick_test"),
     path("tests/groups_of_words_test/<uuid:uuid>", views.GroupOfWordsTest.as_view(), name="groups_of_words_test")
 
 

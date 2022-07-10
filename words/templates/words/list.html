@@ -9,13 +9,21 @@
 <form action="" method="GET">
     {{ filter.form }}
     <input type="Submit" name="filter_button" value="Search">
+    <input type="Reset" value="Reset">
 </form>
 
 <a href="{% url 'words:list' %}">Reset filter</a>
 
 <hr>
 
+<ul>
+    <li>AVG: {{ avg }}</li>
+    <li> MAX: {{ max }}</li>
+    <li> MIN {{ min }}</li>
+</ul>
 
+
+<hr>
 <form action="" method="POST">
     <a href="{% url 'words:create' %}">Create</a>
     {% csrf_token %}

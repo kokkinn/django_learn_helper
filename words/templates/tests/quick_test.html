@@ -7,12 +7,10 @@
 <h1>{{word_obj.word1}}</h1>
 
 <form action="" method="POST">
+    <input type="hidden" id="" name="word_obj" value="{{word_obj.id}}">
     {% csrf_token %}
     {{form}}
-
-
-
-
+    <input type="Submit">
 </form>
-
+<a class="btn btn-primary" href="{% url 'words:tests_home' %}">Back to tests home</a>
 {% endblock %}

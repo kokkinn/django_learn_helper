@@ -1,28 +1,20 @@
 import random
 
-from django import http
-from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core import serializers
 from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.list import MultipleObjectMixin
 
-from accounts.models import CustomUser
 from .filters import WordFilter
 from .models import Word, GroupOfWords
-from django.http import HttpResponse
-from .forms import WordForm, GroupForm, GroupFilterForm, GroupChoiceForm, TestInputForm
-from django.contrib.auth.models import User
-from django.contrib.auth.views import LoginView, LogoutView
-from django.http import HttpResponseRedirect
+
+from .forms import WordForm, GroupForm, GroupFilterForm, GroupChoiceForm, TestInputForm, TestParametersForm
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, ListView, TemplateView
 from django.views.generic.edit import ProcessFormView, UpdateView, DeleteView, FormView
-
-# from accounts.forms import AccountRegistrationForm, AccountUpdateForm, AccountProfileUpdate
-from django.contrib import messages
 
 
 class WordsListView(LoginRequiredMixin, ListView):
@@ -37,6 +29,15 @@ class WordsListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = WordFilter(self.request.GET, queryset=self.get_queryset(), request=self.request)
+
+        words_qs = Word.objects.all()
+        total_score = 0
+        for word in words_qs:
+            total_score += word.score
+        context["min"] = words_qs.order_by("score").first().score
+        context["max"] = words_qs.order_by("score").last().score
+        context["avg"] = round(total_score / words_qs.count(), 2)
+
         return context
 
     def get_template_names(self):
@@ -165,6 +166,7 @@ class GroupUpdateView(FormView):
         group_obj = GroupOfWords.objects.get(id=uuid)
         initial['words'] = group_obj.words.all()
         initial["name"] = group_obj.name
+        initial["description"] = group_obj.description
         return initial
 
     def form_valid(self, form):
@@ -175,7 +177,10 @@ class GroupUpdateView(FormView):
         group_obj.words.clear()
         for word in words:
             group_obj.words.add(word)
+        group_obj.description = form.cleaned_data["description"]
+        group_obj.name = form.cleaned_data["name"]
         group_obj.save()
+
         return HttpResponseRedirect(reverse_lazy("words:groups_list"))
 
 
@@ -259,51 +264,40 @@ def delete_view(request, uuid):
 
 
 class TestsHomeView(TemplateView):
+    template_name = "tests/tests_home.html"
 
     def get_context_data(self, **kwargs):
+        try:
+            del self.request.session['list_test_words']
+            del self.request.session['test_eval']
+        except KeyError:
+            pass
         context = super(TestsHomeView, self).get_context_data(**kwargs)
-        context["form"] = GroupChoiceForm(self.request.user)
+        context["form"] = TestParametersForm(self.request.user)
         return context
 
     def post(self, request):
-        # a = self.request.POST.getlist("group")[0]
-        a = self.request.POST
-        print(f"\nPost request from tests home view: {a}\n")
-        kwargs = {'uuid': self.request.POST.getlist("groups")[0]}
-        # print(kwargs)
+        print("\n------------POST VIEW START-----------")
+        uuid = self.request.POST.getlist("groups")[0]
+        kwargs = {'uuid': uuid}
+
+        if request.POST.getlist("durations")[0] == "finite":
+            request.session['is_finite'] = True
+            words_qs = GroupOfWords.objects.get(id=uuid).words.all()
+            list_test_words = [str(word.id) for word in words_qs]
+            request.session['list_test_words'] = list_test_words
+            print(request.session['list_test_words'])
+        elif request.POST.getlist("durations")[0] == "loop":
+            request.session['is_finite'] = False
+
+        if request.POST.getlist("type")[0] == "ranked":
+            request.session["test_eval"] = "ranked"
+        elif request.POST.getlist("type")[0] == "unranked":
+            request.session["test_eval"] = "unranked"
+
+        print("\n------------POST VIEW END-----------")
         return redirect(
             reverse_lazy("words:groups_of_words_test", kwargs=kwargs))
-        # return redirect(f"tests/groups_of_words_test/{self.request.POST.getlist('groups')[0]}")
-
-    template_name = "tests/tests_home.html"
-
-
-class QuickTest(View):
-    template_name = "tests/quick_test.html"
-
-    def __init__(self):
-        super().__init__()
-        # self.word_obj = Word.objects.order_by("score").first()
-        self.word_obj = random.choice(Word.objects.all())
-
-    def get(self, request):
-        print("From quictest GET", self.word_obj)
-        context = {"word": self.word_obj}
-        return render(request=request, template_name=self.template_name, context=context)
-
-    def post(self, request):
-        print("From quictest POST", self.word_obj)
-        if self.word_obj.word2 == self.request.POST.getlist("input_text")[0]:
-            a = Word.objects.get(id=self.word_obj.id)
-            a.score += 1
-            a.save()
-        else:
-            a = Word.objects.get(id=self.word_obj.id)
-            a.score -= 1
-            a.save()
-        print(self.request.POST.getlist("input_text")[0])
-
-        return redirect(reverse_lazy("words:quick_test"))
 
 
 class GroupOfWordsTest(FormView):
@@ -311,18 +305,41 @@ class GroupOfWordsTest(FormView):
     template_name = "tests/quick_test.html"
     form_class = TestInputForm
     model = Word
+    success_url = reverse_lazy("words:list")
 
-    # def __init__(self):
-    #     super().__init__()
-    #     self.group_obj = None
-    #     self.word_obj = None
+    def get(self, request, *args, **kwargs):
+        if not request.session['list_test_words']:
+            del request.session['list_test_words']
+            return redirect(reverse_lazy("words:tests_home"))
+        return super().get(self, request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        print("\n-----------------------------------START-----------------------------------------")
+
         context = super().get_context_data(**kwargs)
-        uuid = self.kwargs.get("uuid")
-        context["group_obj"] = GroupOfWords.objects.get(id=uuid)
-        context["word_obj"] = random.choice(context["group_obj"].words.all())
-        return context
+        if self.request.session["is_finite"]:
+            uuid = self.kwargs.get("uuid")
+            # self.request.session["kakaka"] = 123456
+            context["group_obj"] = GroupOfWords.objects.get(id=uuid)
+            # print(f"\nCONTEXT DATA from get_context_data: {context}\n")
+            # qs = serializers.serialize('json', qs)
+            randint = random.randint(0, len(self.request.session["list_test_words"]) - 1)
+            print(self.request.session["list_test_words"])
+            a = self.request.session["list_test_words"].pop(randint)
+            self.request.session["pupa"] = 1
+            print(self.request.session["list_test_words"])
+            # self.request.session["list_test_words"].pop(randint)
+            # print(self.request.session["list_test_words"])
+            print("Session key updated")
+            print(a)
+            context["word_obj"] = Word.objects.get(id=a)
+            return context
+        else:
+            uuid = self.kwargs.get("uuid")
+            context["group_obj"] = GroupOfWords.objects.get(id=uuid)
+            context["word_obj"] = random.choice(context["group_obj"].words.all())
+            print(f"\nCONTEXT DATA from get_context_data: {context}\n")
+            return context
 
     # def get_object(self):
     #     uuid = self.kwargs.get("uuid")
@@ -339,9 +356,28 @@ class GroupOfWordsTest(FormView):
     #
 
     def form_valid(self, form):
-        print(f"\nFORM INSTANCE FROM form_valid : {form.instance} \n")
-        print(f"\nC.D. FROM form_valid: {self.get_context_data()} \n")
-        return super().form_valid(form)
+        if form.is_valid():
+            print(f"\nFORM INSTANCE from form_valid : {form.instance}")
+            print(f"\nREQUEST from form_valid: {self.request.POST}\n")
+
+            print(f"{self.request.session['list_test_words']}\n")
+            print(f"{self.request.session['pupa']}\n")
+            uuid = self.request.POST.getlist("word_obj")[0]
+            word_obj = Word.objects.get(id=uuid)
+            input_word = self.request.POST.getlist("word1")[0]
+            print("Word was", word_obj)
+            print("Input word", input_word)
+            if word_obj.word2 == input_word:
+                word_obj.score += 1
+                print("foo", word_obj.score, "\n")
+            else:
+                word_obj.score -= 1
+                print("foooooo", word_obj.score, "\n")
+            word_obj.save()
+            print("------------------------------------END----------------------------------------\n")
+            return redirect(
+                reverse_lazy(f"words:groups_of_words_test", kwargs={'uuid': self.kwargs["uuid"]}))
+
     # def post(self, request, **kwargs):
     #     print("POST", request.POST)
 

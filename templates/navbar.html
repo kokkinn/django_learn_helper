@@ -1,9 +1,8 @@
 {% load static %}
 
-
 <table cellpadding="10">
     <tr>
-        <td><a href="{% url 'index' %}"><img src="{% static 'images/Adidas_Logo.png' %}" width="50" height="50"></a></td>
+        <td><img src="{% static 'default.png' %}" width="50" height="50"></td>
         <td><a href="{% url 'index' %}">Very main page</a></td>
 
         {% if user.is_authenticated %}
