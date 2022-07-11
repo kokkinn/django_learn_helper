@@ -29,6 +29,7 @@ class Word(models.Model):
     id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
     score = models.IntegerField(default=0)
     group = models.ManyToManyField(to=GroupOfWords, related_name='words', blank=True, null=True)
+
     #
     # def __str__(self):
     #     return f"{self.word1}: {self.word2}, {self.score}, {str(self.id)[0:4]}"
@@ -64,3 +65,11 @@ def custom_word(sender, instance, created, **kwargs):
         # kw
         # general_group.save()
         print(f"Word instance created: '{instance}'")
+
+
+class Result(models.Model):
+    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE)
+    id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
+    details = models.JSONField(default=dict)
+    ended = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now=True)

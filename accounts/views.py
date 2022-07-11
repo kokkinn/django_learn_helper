@@ -88,3 +88,4 @@ def send_me_mail(request):
         fail_silently=False
     )
     return render(request, "accounts/thank_you.html")
+

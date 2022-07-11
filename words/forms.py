@@ -75,15 +75,18 @@ class GroupChoiceForm(forms.Form):
     groups = forms.ModelChoiceField(queryset=None)
 
 
-class TestInputForm(ModelForm):
-    class Meta:
-        model = Word
-        fields = ("word1",)
+# class TestInputForm(ModelForm):
+#     class Meta:
+#         model = Word
+#         fields = ("word1",)
+
+class TestInputForm(forms.Form):
+    input_word = forms.CharField()
 
 
 class TestParametersForm(forms.Form):
 
-    def __init__(self, user, *args, **kwargs,):
+    def __init__(self, user, *args, **kwargs, ):
         super(TestParametersForm, self).__init__(*args, **kwargs)
         self.user = user
         groups_qs = GroupOfWords.objects.filter(user=self.user)
@@ -94,7 +97,10 @@ class TestParametersForm(forms.Form):
 
     duration_choices = (("loop", "Loop"), ("finite", "Finite"))
     type_choices = (("ranked", "Ranked"), ("unranked", "Unranked"))
+    test_for_choices = (
+        ("for_w1", "Word1 to Word2"), ("for_w2", "Word2 to Word1"))
 
     groups = forms.ModelChoiceField(queryset=None)
     durations = forms.ChoiceField(choices=duration_choices)
     type = forms.ChoiceField(choices=type_choices)
+    test_for_translation_of = forms.ChoiceField(choices=test_for_choices)

@@ -1,25 +1,7 @@
 import random
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
-from django.views.generic.detail import SingleObjectMixin, DetailView
-
-from words.filters import WordFilter
-from words.models import Word, GroupOfWords, Result
-
-from words.forms import WordForm, GroupForm, GroupFilterForm, GroupChoiceForm, TestInputForm, TestParametersForm
-from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView, ListView, TemplateView
-from django.views.generic.edit import ProcessFormView, UpdateView, DeleteView, FormView
-
-import random
-
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.views.generic.detail import DetailView
 
 from words.models import Word, GroupOfWords, Result
@@ -42,12 +24,6 @@ class TestsHomeView(TemplateView):
     template_name = "tests/tests_home.html"
 
     def get_context_data(self, **kwargs):
-        # tuple_sessions_keys_to_delete = ("result_id", "is_finite", 'list_test_words', 'test_eval')
-        # for key in tuple_sessions_keys_to_delete:
-        #     try:
-        #         del self.request.session[f"{key}"]
-        #     except KeyError:
-        #         pass
         context = super(TestsHomeView, self).get_context_data(**kwargs)
         context["form"] = TestParametersForm(self.request.user)
         return context
@@ -93,21 +69,17 @@ class GroupOfWordsTest(FormView):
     model = Word
     success_url = reverse_lazy("words:list")
 
-    def __init__(self, **kwargs):
-        # print("\n", kwargs["result"], "\n")
-        super().__init__(**kwargs)
-
     def get(self, request, *args, **kwargs):
         if not request.session["test_params"]:
             return redirect(reverse_lazy("words:tests_home"))
-        try:
-            if not request.session["test_params"]['list_test_words']:
-                del request.session["test_params"]
-                return redirect(reverse_lazy("words:tests_home"))
-        except KeyError:
-            pass
+        # try:
+        if not request.session["test_params"]['list_test_words']:  # !!!!!!!!
+            uuid = request.session["test_params"]["result_id"]
+            del request.session["test_params"]
+            return redirect(reverse_lazy("words:single_result", kwargs={"uuid": uuid}))
+        # except KeyError:
+        #     pass
         return self.render_to_response(self.get_context_data(req=request))
-        # return super().get(self, request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         request = kwargs["req"]

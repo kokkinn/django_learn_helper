@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-import accounts.signals
 
 
 class WordsConfig(AppConfig):
