@@ -1,3 +1,5 @@
+import json
+
 import googletrans
 from django.db import models
 import uuid
@@ -19,25 +21,36 @@ class GroupOfWords(models.Model):
     user = models.ForeignKey(to=CustomUser, related_name="groups_of_words", on_delete=models.CASCADE, null=False)
 
     def __str__(self):
-        return self.name
+        return f"{self.name}, {self.user}"
 
 
 class Word(models.Model):
     user = models.ForeignKey(to=CustomUser, related_name="words", on_delete=models.CASCADE)
-    word1 = models.CharField(max_length=30, unique=True)
+    word1 = models.CharField(max_length=30)
     word2 = models.CharField(max_length=30)
     id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
     score = models.IntegerField(default=0)
     group = models.ManyToManyField(to=GroupOfWords, related_name='words', blank=True, null=True)
 
-    #
-    # def __str__(self):
-    #     return f"{self.word1}: {self.word2}, {self.score}, {str(self.id)[0:4]}"
+    def __str__(self):
+        return f"{self.word1}: {self.word2}, {self.score}, {str(self.id)[0:4]}"
 
     # def save(self, *args, **kwargs):
     #
     #     print("'Word' instance created")
     #     super().save(*args, **kwargs)
+    @classmethod
+    def average_score(cls, user, qs=None):
+        score_counter = 0
+        if qs:
+            total_words = qs.all().count()
+            for word in qs:
+                score_counter += word.score
+        else:
+            total_words = user.words.all().count()
+            for word in user.words.all():
+                score_counter += word.score
+        return score_counter / total_words
 
     @classmethod
     def generate(cls, num):
@@ -68,8 +81,22 @@ def custom_word(sender, instance, created, **kwargs):
 
 
 class Result(models.Model):
-    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE, related_name="results")
     id = models.UUIDField(default=uuid.uuid4, db_index=True, unique=True, editable=False, primary_key=True)
     details = models.JSONField(default=dict)
     ended = models.BooleanField(default=False)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def generate_context_dict(self):
+        context_dict = {"test_words": {}}
+        dict_details = self.details
+        for key in list(dict_details["test_words"].keys()):
+            try:
+                context_dict["test_words"][f'{Word.objects.get(id=key).word1} - {Word.objects.get(id=key).word2}'] = \
+                    dict_details["test_words"][key]
+            except:
+                context_dict["test_words"]["Word was deleted"] = dict_details["test_words"][key]
+                self.details["test_words"]["Word was deleted"] = dict_details["test_words"][key]
+                del self.details["test_words"][key]
+                self.save()
+        return context_dict

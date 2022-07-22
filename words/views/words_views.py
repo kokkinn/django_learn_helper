@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.views.generic.detail import SingleObjectMixin
@@ -18,21 +19,20 @@ class WordsListView(LoginRequiredMixin, ListView):
     model = Word
     template_name = "words/list.html"
 
+    # paginate_by = 10
+
     def get_queryset(self):
         super(WordsListView, self).get_queryset()
-        return self.request.user.words.all()
+        return self.request.user.words.all().order_by("word1")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = WordFilter(self.request.GET, queryset=self.get_queryset(), request=self.request)
-
-        words_qs = Word.objects.all()
-        total_score = 0
-        for word in words_qs:
-            total_score += word.score
-        context["min"] = words_qs.order_by("score").first().score
-        context["max"] = words_qs.order_by("score").last().score
-        context["avg"] = round(total_score / words_qs.count(), 2)
+        filtered_word_qs = context["filter"].qs
+        if filtered_word_qs:
+            context["min"] = filtered_word_qs.order_by("score").first().score
+            context["max"] = filtered_word_qs.order_by("score").last().score
+            context["avg"] = Word.average_score(self.request.user, qs=filtered_word_qs)
 
         return context
 
@@ -64,20 +64,47 @@ class WordUpdateView(UpdateView, SingleObjectMixin):
     template_name = "words/word_form.html"
     success_url = reverse_lazy("words:list")
 
+    def get_form_kwargs(self):
+        kwargs = super(WordUpdateView, self).get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
+    def form_valid(self, form):
+        if form.is_valid():
+            Word.objects.get(id=self.kwargs["uuid"]).group.clear()
+            for group in form.cleaned_data["groups"]:
+                group.words.add(form.instance.word1)
+        form.save()
+        messages.success(self.request, f"Word {form.instance.word1} - {form.instance.word2} updated")
+
+        return super().form_valid(form)
+
+    def get_initial(self):
+        initial = super(WordUpdateView, self).get_initial()
+        initial["groups"] = Word.objects.get(id=self.kwargs["uuid"]).group.all()
+
+        return initial
+
 
 class WordCreateView(LoginRequiredMixin, CreateView):
     model = Word
     form_class = WordForm
     template_name = "words/word_form.html"
-    success_url = reverse_lazy("words:list")
+    success_url = reverse_lazy("words:create")
+
+    def get_form_kwargs(self):
+        kwargs = super(WordCreateView, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
-        form.instance.save()
-        general_group = GroupOfWords.objects.get(user=self.request.user, name="General")
-        general_group.words.add(form.instance)
-        general_group.save()
-        # print(self.request.user.groups_of_words)
+        if form.is_valid():
+            form.instance.user = self.request.user
+            form.save()
+            for group in form.cleaned_data["groups"]:
+                group.words.add(form.instance)
+            form.instance.save()
+        messages.success(self.request, f"Word '{form.instance.word1} - {form.instance.word2}' created")
         return super().form_valid(form)
 
 

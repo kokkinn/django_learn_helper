@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
-
+{% load static%}
 <h1>List</h1>
 
 
 {% block content %}
 
+<img src="{% static 'words/baba.jpg' %}" width="50" height="50">
 
 <form action="" method="GET">
     {{ filter.form }}
@@ -59,4 +60,7 @@
 
     </table>
 </form>
+
+
+
 {% endblock content %}

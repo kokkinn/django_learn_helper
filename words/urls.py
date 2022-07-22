@@ -22,7 +22,4 @@ urlpatterns = [
     path("tests/groups_of_words_test/<uuid:uuid>", tests_views.GroupOfWordsTest.as_view(), name="groups_of_words_test"),
     path("tests/group_of_words_test/results", tests_views.TestsResultsListView.as_view(), name="test_results"),
     path("tests/group_of_words_test/results/<uuid:uuid>", tests_views.TestsResultView.as_view(), name="single_result")
-
-
-
 ]

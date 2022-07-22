@@ -128,21 +128,6 @@ class WordsInGroupListView(ListView):
         else:
             return ["words/words_in_group_list.html"]
 
-    # def post(self, request):
-    #     if "delete_button" in request.POST:
-    #         checks = request.POST.getlist("checks")
-    #         # print(checks)
-    #         # print(request.POST)
-    #         print(request.POST.getlist("csrfmiddlewaretoken"))
-    #         for idi in checks:
-    #             word = Word.objects.get(id=idi)
-    #             word.delete()
-    #         return redirect(reverse_lazy("words:list"))
-    #     if "main_button" in request.POST:
-    #         return redirect(reverse_lazy("words:home"))
-
-
-# class WordsInGroupListView(ListView)
 
 def add_view(request):
     return render(request, "words/no_words.html")
@@ -150,25 +135,3 @@ def add_view(request):
 
 def test_view(request):
     return render(request, "words/test.html")
-
-# def create_word(request):
-#     form = WordForm()
-#     if request.method == "POST":
-#         form = WordForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect("index")
-#     context = {"form": form}
-#     return render(request, "words/word_form.html", context)
-
-
-# def update_word(request, uuid):
-#     word_object = Word.objects.get(id=uuid)
-#     form = WordForm(instance=word_object)
-#     if request.method == "POST":
-#         form = WordForm(request.POST, instance=word_object)
-#         if form.is_valid():
-#             form.save()
-#             return redirect("list_view")
-#     context = {"form": form}
-#     return render(request, "words/word_form.html", context)

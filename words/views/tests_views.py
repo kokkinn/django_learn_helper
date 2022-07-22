@@ -29,7 +29,6 @@ class TestsHomeView(TemplateView):
         return context
 
     def post(self, request):
-        print("\n------------POST VIEW START-----------")
         uuid = self.request.POST.getlist("groups")[0]
         kwargs = {'uuid': uuid}
         request.session['test_params'] = {}
@@ -55,9 +54,18 @@ class TestsHomeView(TemplateView):
         elif request.POST.getlist("test_for_translation_of")[0] == "for_w2":
             request.session["test_params"]["for_wX"] = 2
 
+        if request.POST.getlist("do_with_incorrect")[0] == "skip":
+            request.session["test_params"]["do_with_incorrect"] = "skip"
+        elif request.POST.getlist("do_with_incorrect")[0] == "repeat":
+            request.session["test_params"]["do_with_incorrect"] = "repeat"
+
+        if request.POST.getlist("lower_score_first")[0] == "lower_score_first":
+            request.session["test_params"]["lower_score_first"] = "lower_score_first"
+        elif request.POST.getlist("lower_score_first")[0] == "random_score_first":
+            request.session["test_params"]["lower_score_first"] = "random_score_first"
+
         request.session['test_params']["is_ended"] = False
         request.session.modified = True
-        print("\n------------POST VIEW END-----------")
         return redirect(
             reverse_lazy("words:groups_of_words_test", kwargs=kwargs))
 
@@ -70,15 +78,18 @@ class GroupOfWordsTest(FormView):
     success_url = reverse_lazy("words:list")
 
     def get(self, request, *args, **kwargs):
-        if not request.session["test_params"]:
+        try:
+            var = request.session["test_params"]
+        except KeyError:
             return redirect(reverse_lazy("words:tests_home"))
-        # try:
-        if not request.session["test_params"]['list_test_words']:  # !!!!!!!!
-            uuid = request.session["test_params"]["result_id"]
-            del request.session["test_params"]
-            return redirect(reverse_lazy("words:single_result", kwargs={"uuid": uuid}))
-        # except KeyError:
-        #     pass
+        try:
+            if not request.session["test_params"]['list_test_words']:
+                uuid = request.session["test_params"]["result_id"]
+                del request.session["test_params"]
+                return redirect(reverse_lazy("words:single_result", kwargs={"uuid": uuid}))
+        except KeyError:
+            pass
+
         return self.render_to_response(self.get_context_data(req=request))
 
     def get_context_data(self, **kwargs):
@@ -104,19 +115,25 @@ class GroupOfWordsTest(FormView):
 
         elif request.session["test_params"]["duration"] == "loop":
             context["group_obj"] = GroupOfWords.objects.get(id=self.kwargs.get("uuid"))
-            context["word_obj"] = random.choice(context["group_obj"].words.all())
+            if request.session["test_params"]["lower_score_first"] == "lower_score_first":
+                min_score = context["group_obj"].words.filter().order_by('score').first().score
+                context["word_obj"] = random.choice(context["group_obj"].words.filter(score=min_score))
+            else:
+                context["word_obj"] = random.choice(context["group_obj"].words.filter().order_by('score').first())
             return context
 
     def form_valid(self, form):
         if form.is_valid():
             word_obj = Word.objects.get(id=self.request.POST.getlist("word_obj")[0])
-            input_word = self.request.POST.getlist("input_word")[0]
+            input_word = self.request.POST.getlist("input_word")[0].lower().strip(" ")
             compare_with = None
-            if self.request.session["test_params"]["for_wX"] == 1:
-                compare_with = word_obj.word2
-            elif self.request.session["test_params"]["for_wX"] == 2:
-                compare_with = word_obj.word1
-
+            try:
+                if self.request.session["test_params"]["for_wX"] == 1:
+                    compare_with = word_obj.word2.lower().strip(" ")
+                elif self.request.session["test_params"]["for_wX"] == 2:
+                    compare_with = word_obj.word1.lower().strip(" ")
+            except KeyError:
+                return redirect(reverse_lazy("words:tests_home"))
             print(f"\nI COMPARE {compare_with} WITH {input_word}\n")
 
             if compare_with == input_word:
@@ -125,23 +142,28 @@ class GroupOfWordsTest(FormView):
                                  f'"{word_obj.word2}"')
                 if self.request.session["test_params"]["test_eval"] == "ranked":
                     word_obj.score += 1
+                if self.request.session["test_params"]["duration"] == "finite":
                     res_obj = Result.objects.get(id=self.request.session["test_params"]["result_id"])
-                    if self.request.session["test_params"]["duration"] == "finite":
-                        res_obj.details["test_words"][f"{str(word_obj.id)}"]["input_word"] = input_word
-                        res_obj.details["test_words"][f"{str(word_obj.id)}"]["is_correct"] = True
-                        res_obj.save()
+                    res_obj.details["test_words"][f"{str(word_obj.id)}"]["input_word"] = input_word
+                    res_obj.details["test_words"][f"{str(word_obj.id)}"]["is_correct"] = True
+                    res_obj.save()
 
             elif compare_with != input_word:
                 messages.success(self.request,
                                  f'Answer "{input_word}" is incorrect. Correct translation of "{word_obj.word1}" is '
                                  f'"{word_obj.word2}"')
+
                 if self.request.session["test_params"]["test_eval"] == "ranked":
                     word_obj.score -= 1
-                    if self.request.session["test_params"]["duration"] == "finite":
-                        res_obj = Result.objects.get(id=self.request.session["test_params"]["result_id"])
-                        res_obj.details["test_words"][f"{str(word_obj.id)}"]["input_word"] = input_word
-                        res_obj.details["test_words"][f"{str(word_obj.id)}"]["is_correct"] = False
-                        res_obj.save()
+                if self.request.session["test_params"]["do_with_incorrect"] == "repeat" and \
+                        self.request.session["test_params"]["duration"] == "finite":
+                    self.request.session["test_params"]["list_test_words"].append(str(word_obj.id))
+                    self.request.session.modified = True
+                if self.request.session["test_params"]["duration"] == "finite":
+                    res_obj = Result.objects.get(id=self.request.session["test_params"]["result_id"])
+                    res_obj.details["test_words"][f"{str(word_obj.id)}"]["input_word"] = input_word
+                    res_obj.details["test_words"][f"{str(word_obj.id)}"]["is_correct"] = False
+                    res_obj.save()
 
             word_obj.save()
 
@@ -154,6 +176,16 @@ class TestsResultsListView(ListView):
     context_object_name = 'results'
     template_name = "tests/results_list.html"
 
+    def get_queryset(self):
+        super(TestsResultsListView, self).get_queryset()
+        print(self.request.user.results)
+        return self.request.user.results.all()
+
+    def get(self, request, *args, **kwargs):
+        return super(TestsResultsListView, self).get(request, *args, **kwargs)
+
+def update_result_details():
+    pass
 
 class TestsResultView(DetailView):
     pk_url_kwarg = "uuid"
@@ -163,17 +195,7 @@ class TestsResultView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        dict_details = Result.objects.get(id=self.kwargs["uuid"]).details
-
-        # print(f"\nDETAILS DICT{dict_details}\n")
-        # print(f"\n{dict_details['test_words'].keys()}\n")
-
-        context_dict = {"test_words": {}}
-        for key in dict_details["test_words"].keys():
-            print(f"\nWe take {key}")
-            context_dict["test_words"][f'{Word.objects.get(id=key).word1} - {Word.objects.get(id=key).word2}'] = \
-                dict_details["test_words"][key]
-            # print("\n", dict_details["test_words"], "\n")
+        res_obj = Result.objects.get(id=self.kwargs["uuid"])
+        context_dict = res_obj.generate_context_dict()
         context["dict"] = context_dict
-        print(context_dict)
         return context

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import AccountLoginView
+from .views import AccountLoginView, activation_email_confirmation
 from .views import AccountLogoutView
 from .views import AccountRegistrationDoneView
 from .views import AccountRegistrationView
@@ -20,5 +20,6 @@ urlpatterns = [
     path('profile/', account_profile_view, name='profile'),
     path('profile_change/', AccountUpdateProfileView.as_view(), name='profile_change'),
     path("mail/", views.send_me_mail),
+    path('confirm_email/', activation_email_confirmation, name="activation_email_confirmation")
 
 ]
